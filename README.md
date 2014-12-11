@@ -1,5 +1,7 @@
 # Flocker
 
+[![Build Status](https://travis-ci.org/miguel-vila/flocker.svg?branch=master)](https://travis-ci.org/miguel-vila/flocker)
+
 Un generador de tweets usando una cadena de markov sencilla. Se alimenta con una lista de usuarios de twitter y se producen tweets basados en los tweets de esos usuarios. 
 
 Usa:
