@@ -7,5 +7,6 @@ package object ops {
 
   object status_stream extends ToStatusStreamOps
   object response_list extends ToResponseListOps
+  object token_stream extends ToTokenStreamOps
 
 }

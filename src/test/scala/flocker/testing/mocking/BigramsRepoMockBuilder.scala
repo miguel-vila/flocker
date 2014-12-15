@@ -19,12 +19,12 @@ case class BigramsRepoMockBuilder(private val repo: BigramsRepository = mock(cla
   }
 
   def withReturningRandomsInOrder(randomBigrams: Bigram*): BigramsRepoMockBuilder = {
-    when(repo.randomBigram()).thenAnswer(new Answer[Option[Bigram]] {
+    when(repo.randomBigram()).thenAnswer(new Answer[Bigram] {
       var i = 0
-      override def answer(invocation: InvocationOnMock): Option[Bigram] = {
+      override def answer(invocation: InvocationOnMock): Bigram = {
         val response = randomBigrams(i)
         i+=1
-        Some(response)
+        response
       }
     })
     BigramsRepoMockBuilder(repo)

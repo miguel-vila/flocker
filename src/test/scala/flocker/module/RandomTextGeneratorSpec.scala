@@ -1,6 +1,6 @@
 package flocker.module
 
-import flocker.model.{Words, Word, Bigram}
+import flocker.model.{Token, AfterPhraseEnd, Words, Bigram}
 import flocker.testing.mocking.{RandomUtilsMocking, BigramsRepoMockBuilder}
 import org.scalatest.{Matchers, FlatSpec}
 
@@ -22,7 +22,7 @@ class RandomTextGeneratorSpec
       Bigram.wordBigram("jumps", "over") -> Words.asList("the", "the"),
       Bigram.wordBigram("over", "the") -> Words.asList("brown", "brown"),
       Bigram.wordBigram("quick", "brown") -> Words.asList("fox"),
-      Bigram.wordBigram("slow", "jumps") -> Words.asList("over"),
+      Bigram.wordBigram("slow", "jumps") -> List(AfterPhraseEnd),
       Bigram.wordBigram("the", "brown") -> Words.asList("fox", "fox"),
       Bigram.wordBigram("who", "is") -> Words.asList("slow", "dead.")
     )
@@ -33,10 +33,10 @@ class RandomTextGeneratorSpec
     ).build()
 
     class RandomTextGeneratorTest extends RandomTextGenerator(mockRepo) {
-      override val random = randomUtilsMockWithRandomAnswers(Map(
+      override val random = randomUtilsMockWithRandomAnswers[Token](Map(
         Words.asList("brown") -> Words.asList("brown"),
         Words.asList("jumps", "who", "who") -> Words.asList("who"),
-        Words.asList("over") -> Words.asList("over"),
+        List(AfterPhraseEnd) -> List(AfterPhraseEnd),
         Words.asList("is", "is") -> Words.asList("is"),
         Words.asList("jumps") -> Words.asList("jumps"),
         Words.asList("the","the") -> Words.asList("the"),
@@ -49,7 +49,7 @@ class RandomTextGeneratorSpec
     }
 
     val randomTextGenerator = new RandomTextGeneratorTest()
-    randomTextGenerator.generateRandomText().take(6) should equal (Words.asStream("brown","fox","who","is","slow","jumps"))
+    randomTextGenerator.generateRandomText() should equal ("brown fox who is slow jumps")
   }
 
 }

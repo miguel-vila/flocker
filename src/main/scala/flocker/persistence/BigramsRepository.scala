@@ -24,6 +24,6 @@ class BigramsRepository(client: RedisClient) {
     }
   }
 
-  def randomBigram(): Option[Bigram] = client.randomkey(BigramParse)
+  def randomBigram(): Bigram = client.randomkey(BigramParse).get
 
 }
