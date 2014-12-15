@@ -33,7 +33,7 @@ class TopicActor(topicId: String, repo: BigramsRepository, twitter: Twitter, tim
   val receiveCommand: Receive = trackingUsers
 
   /**
-   * Inicializa los
+   * Inicializa los actores extractores
    * @param initialDelay el initialDelay inicial con el que se inicializan los actores de tracking del usuario
    * @param newUserActors la lista de actores de retrieving de un usuario
    * @return el initialDelay final después de haber inicializado todos los actores de tracking
