@@ -14,7 +14,6 @@ case class RandomTextGenerator(repo: BigramsRepository) {
 
   def generateRandomText(): String = {
     val tokens = generateRandomTextStartingWith( repo.randomBigram() )
-    println(tokens.take(7).toList)
     tokens.concatenateToLessThan140Chars()
   }
 
