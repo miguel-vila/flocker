@@ -2,6 +2,7 @@ package flocker.actor
 
 import akka.actor.{Props, ActorSystem}
 import akka.testkit.TestProbe
+import flocker.module.RandomTextGenerator
 import flocker.persistence.BigramsRepository
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -12,6 +13,7 @@ import org.scalatest.Matchers
 import twitter4j.Twitter
 import scala.collection.mutable
 import scala.concurrent.duration._
+import org.mockito.Mockito._
 
 /**
  * Created by mglvl on 10/22/14.
@@ -41,6 +43,14 @@ with MockitoSugar
     val topicActorSubactors = new TopicActorSubactors
 
     val topicActor = topicActorSubactors.createTestTopicActor(topicId, repo, twitter, 30 minutes, actorId)
+    (topicActorSubactors, topicActor)
+  }
+
+  def getTopicActorAndGeneratingRandomText(topicId: String, randomText: String, twitter: Twitter, actorId: String): (TopicActorSubactors,TopicActorRef) = {
+    val repo = mock[BigramsRepository]
+    val topicActorSubactors = new TopicActorSubactors
+
+    val topicActor = topicActorSubactors.createTestTopicActorGeneratingRandomText(topicId, randomText, repo, twitter, 30 minutes, actorId)
     (topicActorSubactors, topicActor)
   }
 
@@ -89,6 +99,16 @@ with MockitoSugar
         }
       }, 5 seconds)
     }
+
+    "publicar tweets aleatorios cuando se lo solicita" in {
+      val randomText = "raaaandom"
+      val twitter = mock[Twitter]
+      val (_, topicActor) = getTopicActorAndGeneratingRandomText("topic-3", randomText, twitter, "Test-Topic-Actor-3")
+      topicActor ! TopicActor.PublishRandomTweet
+      awaitAssert({
+        verify(twitter,times(1)).updateStatus(randomText)
+      }, 1 second)
+    }
   }
 
 }
@@ -99,12 +119,23 @@ with MockitoSugar
  * actores de tracking y parsing de verdad sino TestProbes y permite acumular
  * esas instancias en un HashMap
  */
-class TopicActorSubactors {
+class TopicActorSubactors extends MockitoSugar {
 
-  def props(topicId: String, repo: BigramsRepository, twitter: Twitter, timeBetweenQueries: FiniteDuration): Props = Props(new TopicActor(topicId, repo, twitter, timeBetweenQueries) with TestUserActorsCreator)
+  def propsReturningRandomText(topicId: String, randomText: String, repo: BigramsRepository, twitter: Twitter, timeBetweenQueries: FiniteDuration): Props = Props(new TopicActor(topicId, repo, twitter, timeBetweenQueries) with TestUserActorsCreator {
+    override val randomTextGen: RandomTextGenerator = mock[RandomTextGenerator]
+    when(randomTextGen.generateRandomText()).thenReturn(randomText)
+  })
+
+  def props(topicId: String, repo: BigramsRepository, twitter: Twitter, timeBetweenQueries: FiniteDuration): Props = Props(new TopicActor(topicId, repo, twitter, timeBetweenQueries) with TestUserActorsCreator {
+    override val randomTextGen: RandomTextGenerator = mock[RandomTextGenerator]
+  })
 
   def createTestTopicActor(topicId: String, repo: BigramsRepository, twitter: Twitter, timeBetweenQueries: FiniteDuration, actorName: String)(implicit as: ActorSystem): TopicActorRef = {
     new TopicActorRef( as.actorOf( props(topicId, repo, twitter, timeBetweenQueries), actorName ) )
+  }
+
+  def createTestTopicActorGeneratingRandomText(topicId: String, randomText: String, repo: BigramsRepository, twitter: Twitter, timeBetweenQueries: FiniteDuration, actorName: String)(implicit as: ActorSystem): TopicActorRef = {
+    new TopicActorRef( as.actorOf( propsReturningRandomText(topicId, randomText, repo, twitter, timeBetweenQueries), actorName ) )
   }
 
   case class UserActorProbes(trackingProbe: TestProbe, parsingProbe: TestProbe)

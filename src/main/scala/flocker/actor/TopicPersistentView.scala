@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.persistence.PersistentView
 import com.mongodb.casbah.commons.MongoDBObject
 import com.mongodb.casbah.{MongoClient, MongoClientURI}
-import flocker.actor.TopicActor.{NewUsersTrackedEvent, TopicActorEvent}
+import flocker.actor.TopicActor.{RandomTweetPublished, NewUsersTrackedEvent, TopicActorEvent}
 import com.mongodb.casbah.Imports.$push
 
 /**
@@ -31,6 +31,12 @@ class TopicPersistentView(topicId: String) extends PersistentView {
       coll.update(
         MongoDBObject("topic_id" -> topicId),
         $push("usernames").$each(newUserNames.toSeq:_*),
+        upsert = true
+      )
+    case RandomTweetPublished(topicId, tweet) =>
+      coll.update(
+        MongoDBObject("topic_id" -> topicId),
+        $push("tweets").$each(tweet),
         upsert = true
       )
   }

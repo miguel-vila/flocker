@@ -5,5 +5,6 @@ package flocker.model
  */
 case class Topic(
   topic_id: String,
-  usernames: List[String]
+  usernames: List[String] = List(),
+  tweets: List[String] = List()
 )

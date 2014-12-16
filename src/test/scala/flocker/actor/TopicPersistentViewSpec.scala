@@ -10,12 +10,14 @@ import org.junit.runner.RunWith
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{BeforeAndAfterEach, Matchers, BeforeAndAfterAll, WordSpecLike}
 import org.scalatest.junit.JUnitRunner
-import twitter4j.Twitter
+import twitter4j.{Status, Twitter}
 import scala.concurrent.duration._
 import de.flapdoodle.embed.process.runtime.Network
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+import org.mockito.Mockito._
+import org.mockito.Matchers._
 
 /**
  * Created by mglvl on 11/7/14.
@@ -79,9 +81,19 @@ with MockitoSugar
     val repo = mock[BigramsRepository]
     val twitter = mock[Twitter]
     val topicActorSubactors = new TopicActorSubactors
+    val topicActor = topicActorSubactors.createTestTopicActor(topicId, repo, twitter, 2 seconds, persistentActorId)
 
     val topicView = TopicPersistentView.actorRef( topicId, persistentViewId )
-    val topicActor = topicActorSubactors.createTestTopicActor(topicId, repo, twitter, 2 seconds, persistentActorId)
+    (topicActor, topicView)
+  }
+
+  def getTopicActorsGeneratingRandomText(topicId: String, persistentActorId: String, persistentViewId: String, randomText: String): (TopicActorRef, TopicPersistentViewRef) = {
+    val repo = mock[BigramsRepository]
+    val twitter = mock[Twitter]
+    when(twitter.updateStatus(any(classOf[String]))).thenReturn(mock[Status])
+    val topicActorSubactors = new TopicActorSubactors
+    val topicActor = topicActorSubactors.createTestTopicActorGeneratingRandomText(topicId, randomText, repo, twitter, 30 minutes, persistentActorId)
+    val topicView = TopicPersistentView.actorRef( topicId, persistentViewId )
     (topicActor, topicView)
   }
 
@@ -148,6 +160,18 @@ with MockitoSugar
       topicActor ! TopicActor.TrackUsers(users2)
 
       val expected = Topic(topicId, List("a","b","c","d"))
+
+      awaitTopicObjectToBe(topicId, expected, "El Topic no se actualizó correctamente")
+    }
+
+    "Actualiza un Topic incluyendo un tweet generado" in {
+      val randomText = "randooom"
+      val topicId = "topic-5"
+      val (topicActor, topicView) = getTopicActorsGeneratingRandomText( topicId, "topic-view-5", "test-Topic-Actor-5", randomText )
+
+      topicActor ! TopicActor.PublishRandomTweet
+
+      val expected = Topic(topicId, List(), List(randomText))
 
       awaitTopicObjectToBe(topicId, expected, "El Topic no se actualizó correctamente")
     }

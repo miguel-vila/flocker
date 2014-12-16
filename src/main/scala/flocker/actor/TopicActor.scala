@@ -3,6 +3,7 @@ package flocker.actor
 import akka.actor._
 import akka.persistence.PersistentActor
 import flocker.infrastructure.Delay
+import flocker.module.RandomTextGenerator
 import flocker.persistence.BigramsRepository
 import twitter4j.Twitter
 import scala.concurrent.duration._
@@ -11,16 +12,22 @@ import scala.collection.immutable.HashMap
 /**
  * Created by mglvl on 10/17/14.
  */
-class TopicActor(topicId: String, repo: BigramsRepository, twitter: Twitter, timeBetweenQueries: FiniteDuration) extends PersistentActor {
+class TopicActor(
+                  topicId: String,
+                  repo: BigramsRepository,
+                  twitter: Twitter,
+                  timeBetweenQueries: FiniteDuration) extends PersistentActor {
   this: UserActorsCreator =>
 
   import flocker.actor.TopicActor._
   import context._
 
   val persistenceId = s"topic-$topicId"
+  val randomTextGen = RandomTextGenerator(repo)
 
   var userActorsRefs: Map[String,TwitterUserActors] = new HashMap()
   var delay: Delay = Delay(200 millis)
+  var randomTweets: List[String] = List()
 
   def receiveRecover: Receive = {
     case event: TopicActorEvent => handleEvent(event)
@@ -28,9 +35,23 @@ class TopicActor(topicId: String, repo: BigramsRepository, twitter: Twitter, tim
 
   def handleEvent(event: TopicActorEvent): Unit = event match {
     case NewUsersTrackedEvent(topicId, userScreenNames) => trackNewUsers(userScreenNames)
+    case RandomTweetPublished(topicId, randomTweet) => randomTweets = randomTweet :: randomTweets
   }
 
-  val receiveCommand: Receive = trackingUsers
+  val receiveCommand: Receive = {
+    /**
+     * Si le llegan nuevos usuarios entonces solicita su tracking y "actualiza" los atributos 'userActorsRefs' y 'initialDelay'
+     */
+    case TrackUsers(userScreenNames) =>
+      val notTracked = userScreenNames.toStream.filterNot(userActorsRefs.isDefinedAt)
+      persist(NewUsersTrackedEvent(topicId, notTracked)) { evt =>
+        trackNewUsers(evt.userScreenNames)
+      }
+    case PublishRandomTweet =>
+      val randomTweet = randomTextGen.generateRandomText()
+      twitter.updateStatus(randomTweet)
+      persist(RandomTweetPublished(topicId, randomTweet)) { _ => }
+  }
 
   /**
    * Inicializa los actores extractores
@@ -53,18 +74,6 @@ class TopicActor(topicId: String, repo: BigramsRepository, twitter: Twitter, tim
     userActorsRefs ++= newUserActorsRefs
   }
 
-  /**
-   * Estado durante el cuál el actor está listo para recibir nuevos 'screenNames' de usuarios para hacerle tracking
-   * @return si le llegan nuevos usuarios entonces solicita su tracking y "actualiza" los atributos 'userActorsRefs' y 'initialDelay'
-   */
-  def trackingUsers: Receive = {
-    case TrackUsers(userScreenNames) =>
-      val notTracked = userScreenNames.toStream.filterNot(userActorsRefs.isDefinedAt)
-      persist(NewUsersTrackedEvent(topicId, notTracked)) { evt =>
-        trackNewUsers(evt.userScreenNames)
-      }
-  }
-
 }
 
 object TopicActor {
@@ -74,6 +83,7 @@ object TopicActor {
    ********************/
   sealed trait TopicActorMessage
   final case class TrackUsers(userScreenNames: Iterable[String]) extends TopicActorMessage
+  final case object PublishRandomTweet extends TopicActorMessage
 
   /**********
    * Events *
@@ -82,6 +92,7 @@ object TopicActor {
     def topicId: String
   }
   final case class NewUsersTrackedEvent(topicId: String, userScreenNames: Iterable[String]) extends TopicActorEvent
+  final case class RandomTweetPublished(topicId: String, tweet: String) extends TopicActorEvent
 
   /**
    * Props
