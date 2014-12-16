@@ -1,19 +1,17 @@
 package flocker.actor
 
-import akka.actor.Actor
+import akka.actor.{ActorRef, ActorSystem, Props, Actor}
 import flocker.module.RandomTextGenerator
-import flocker.persistence.BigramsRepository
 
 /**
  * Created by mglvl on 10/26/14.
  */
-class RandomTextGeneratorActor(repo: BigramsRepository) extends Actor {
+class RandomTextGeneratorActor(txtGen: RandomTextGenerator) extends Actor {
   import RandomTextGeneratorActor._
 
-  val txtGen = RandomTextGenerator(repo)
-
   def receive = {
-    case GenerateRandomText => txtGen.generateRandomText()
+    case GenerateRandomText =>
+      sender ! txtGen.generateRandomText()
   }
 
 }
@@ -24,4 +22,11 @@ object RandomTextGeneratorActor {
     ********************/
   sealed trait RandomTextGeneratorActorMessage
   final case object GenerateRandomText extends RandomTextGeneratorActorMessage
+  
+  def props(txtGen: RandomTextGenerator): Props = Props( new RandomTextGeneratorActor(txtGen) )
+  
+  def actorRef(txtGen: RandomTextGenerator, actorName: String)(implicit as: ActorSystem): ActorRef = {
+    as.actorOf(props(txtGen), actorName)
+  }
+  
 }
