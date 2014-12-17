@@ -34,13 +34,11 @@ class TopicActor(
   }
 
   def handleEvent(event: TopicActorEvent): Unit = event match {
-    case TopicCreated(topicId) => ()
     case NewUsersTrackedEvent(topicId, userScreenNames) => trackNewUsers(userScreenNames)
     case RandomTweetPublished(topicId, randomTweet) => randomTweets = randomTweet :: randomTweets
   }
 
   val receiveCommand: Receive = {
-    case Create => persist(TopicCreated(topicId)) { _ => () }
     /**
      * Si le llegan nuevos usuarios entonces solicita su tracking y "actualiza" los atributos 'userActorsRefs' y 'initialDelay'
      */
@@ -84,7 +82,6 @@ object TopicActor {
    * Incoming messages *
    ********************/
   sealed trait TopicActorMessage
-  final case object Create extends TopicActorMessage
   final case class TrackUsers(userScreenNames: Iterable[String]) extends TopicActorMessage
   final case object PublishRandomTweet extends TopicActorMessage
 
@@ -94,7 +91,6 @@ object TopicActor {
   sealed trait TopicActorEvent {
     def topicId: String
   }
-  final case class TopicCreated(topicId: String) extends TopicActorEvent
   final case class NewUsersTrackedEvent(topicId: String, userScreenNames: Iterable[String]) extends TopicActorEvent
   final case class RandomTweetPublished(topicId: String, tweet: String) extends TopicActorEvent
 

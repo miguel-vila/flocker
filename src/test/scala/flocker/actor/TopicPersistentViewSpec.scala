@@ -114,8 +114,6 @@ with MockitoSugar
       val topicId = "topic-0"
       val (topicActor, topicView) = getTopicActors( topicId, "topic-view-0", "test-Topic-Actor-0" )
 
-      topicActor ! TopicActor.Create
-
       val expected = Topic(topicId)
 
       awaitTopicObjectToBe(topicId, expected, "El Topic no se almacenó")
