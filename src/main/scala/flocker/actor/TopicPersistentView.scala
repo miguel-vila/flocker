@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.persistence.PersistentView
 import com.mongodb.casbah.commons.MongoDBObject
 import com.mongodb.casbah.{MongoClient, MongoClientURI}
-import flocker.actor.TopicActor.{RandomTweetPublished, NewUsersTrackedEvent, TopicActorEvent}
+import flocker.actor.TopicActor.{TopicCreated, RandomTweetPublished, NewUsersTrackedEvent, TopicActorEvent}
 import com.mongodb.casbah.Imports.$push
 
 /**
@@ -27,6 +27,8 @@ class TopicPersistentView(topicId: String) extends PersistentView {
   }
 
   def handleTopicEvent(topicEvent: TopicActorEvent) = topicEvent match {
+    case TopicCreated(topicId) =>
+      coll.insert(MongoDBObject("topic_id" -> topicId))
     case NewUsersTrackedEvent(topicId, newUserNames) =>
       coll.update(
         MongoDBObject("topic_id" -> topicId),
