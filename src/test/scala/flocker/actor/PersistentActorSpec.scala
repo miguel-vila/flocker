@@ -4,18 +4,15 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import com.typesafe.config.{Config, ConfigFactory}
 import de.flapdoodle.embed.process.runtime.Network
+import flocker.persistence.WithMockPersistence
 import flocker.testing.mocking.MockPersistence
 import org.scalatest.Suite
 
 /**
  * Created by mglvl on 11/3/14.
  */
-abstract class PersistentActorSpec(actorSystemName: String, freePort: Int = PersistentActorSpec.freePort, config: Config = PersistentActorSpec.config(PersistentActorSpec.freePort)) extends TestKit(ActorSystem(actorSystemName, config)) {
+abstract class PersistentActorSpec(actorSystemName: String, val freePort: Int = PersistentActorSpec.freePort, config: Config = PersistentActorSpec.config(PersistentActorSpec.freePort)) extends TestKit(ActorSystem(actorSystemName, config)) with WithMockPersistence {
   this : Suite =>
-
-  import PersistentActorSpec._
-
-  lazy val mockPersistence = MockPersistence( freePort )
 }
 
 object PersistentActorSpec {
