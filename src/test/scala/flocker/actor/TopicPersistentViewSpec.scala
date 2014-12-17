@@ -110,6 +110,17 @@ with MockitoSugar
 
   "Un TopicPersistentViewSpec" should {
 
+    "Crea un Topic" in {
+      val topicId = "topic-0"
+      val (topicActor, topicView) = getTopicActors( topicId, "topic-view-0", "test-Topic-Actor-0" )
+
+      topicActor ! TopicActor.Create
+
+      val expected = Topic(topicId)
+
+      awaitTopicObjectToBe(topicId, expected, "El Topic no se almacenó")
+    }
+
     "Crea un Topic que no existía cuando se le mandan los primeros users" in {
       val topicId = "topic-1"
       val (topicActor, topicView) = getTopicActors( topicId, "topic-view-1", "test-Topic-Actor-1" )
