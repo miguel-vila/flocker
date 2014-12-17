@@ -27,3 +27,9 @@ class BigramsRepository(client: RedisClient) {
   def randomBigram(): Bigram = client.randomkey(BigramParse).get
 
 }
+
+object BigramsRepository {
+  def apply(host: String, port: Int)(dbId: Int) = {
+    new BigramsRepository( new RedisClient(host, port, dbId) )
+  }
+}

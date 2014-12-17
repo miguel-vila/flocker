@@ -1,7 +1,7 @@
 package flocker.infrastructure
 
 import flocker.configuration.TwitterConfig
-import twitter4j.conf.Configuration
+import twitter4j.conf.{ConfigurationBuilder, Configuration}
 
 /**
   * Created by mglvl on 10/19/14.
@@ -16,6 +16,19 @@ object Twitter {
 
   def apply(): Twitter = {
     val config = TwitterConfig.defaultTwitterConfig
+    apply(config)
+  }
+
+  def apply(
+             OAuthConsumerKey: String,
+             OAuthConsumerSecret: String,
+             OAuthAccessToken: String,
+             OAuthAccessTokenSecret: String): Twitter = {
+    val config = (new ConfigurationBuilder).setOAuthConsumerKey( OAuthConsumerKey )
+      .setOAuthConsumerSecret( OAuthConsumerSecret )
+      .setOAuthAccessToken( OAuthAccessToken )
+      .setOAuthAccessTokenSecret( OAuthAccessTokenSecret )
+      .build()
     apply(config)
   }
 
