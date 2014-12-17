@@ -34,6 +34,7 @@ resolvers ++= Seq(
 )
 
 val scalazV = "7.0.6"
+val sprayV = "1.3.1"
 val akkaV = "2.3.6"
 
 libraryDependencies ++= Seq(
@@ -42,16 +43,18 @@ libraryDependencies ++= Seq(
   "com.github.ddevore"  %%  "akka-persistence-mongo-casbah" % "0.7.4",
   "org.twitter4j"       %   "twitter4j-core"                % "4.0.0",
   "org.scalaz"          %%  "scalaz-core"                   % scalazV,
-  "io.spray"            %%  "spray-can"                     % "1.3.1",
+  "io.spray"            %%  "spray-can"                     % sprayV,
+  "io.spray"            %%  "spray-routing"                 % sprayV,
   "net.debasishg"       %%  "redisclient"                   % "2.13",
-  "org.mockito"         %   "mockito-core"                  % "1.10.8",
   "joda-time"           %   "joda-time"                     % "1.5.2",
   "com.novus"           %%  "salat"                         % "1.9.9",
-/*
-  "org.json4s"          %%  "json4s-jackson"                % "3.2.11",
-  "org.reactivemongo"   %%  "reactivemongo"                 % "0.10.5.0.akka23",
-  "net.fehmicansaglam"  %%  "reactivemongo-extensions-bson" % "0.10.0.4",
-*/
+  /*
+    "org.json4s"          %%  "json4s-jackson"                % "3.2.11",
+    "org.reactivemongo"   %%  "reactivemongo"                 % "0.10.5.0.akka23",
+    "net.fehmicansaglam"  %%  "reactivemongo-extensions-bson" % "0.10.0.4",
+  */
+  "io.spray"            %%  "spray-testkit"                 % sprayV    % "test",
+  "org.mockito"         %   "mockito-core"                  % "1.10.8"  % "test",
   "com.typesafe.akka"   %%  "akka-testkit"                  % akkaV     % "test",
   "junit"               %   "junit"                         % "4.10"    % "test",
   "org.scalatest"       %%  "scalatest"                     % "2.2.1"   % "test",
